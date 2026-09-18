@@ -65,7 +65,7 @@
       lead: 'Silverfish need damp and dark, so they turn up in bathrooms, basements and storage boxes.',
       steps: ['Moisture sources identified, since silverfish cannot survive without them', 'Treatment of voids, baseboards and storage areas', 'Ventilation and damp advice for the affected rooms', 'Follow-up to confirm the population is gone'],
       why: 'Silverfish feed on paper, book bindings, wallpaper paste, natural fabric and dry goods. They are slow to build up and easy to miss until stored documents, clothing or photographs are already damaged.',
-      img: 'silverfish.jpg', alt: 'A silverfish on a damp surface' },
+      img: null, alt: '' },
     { slug: 'spiders', name: 'Spiders',
       lead: 'Most spiders in an LA home are harmless, but black widows are common and worth taking seriously.',
       steps: ['Webs and egg sacs removed from eaves, corners and garages', 'Treatment of the insects spiders are feeding on', 'Black widow harborage in garages, meter boxes and woodpiles treated', 'Perimeter and entry points treated'],
@@ -127,8 +127,42 @@
     if (parts[0] === 'insulation') return { page: 'service', svc: 'insulation' };
     if (parts[0] === 'construction-services') return { page: 'service', svc: 'construction' };
     if (parts[0] === 'pest' && parts[1] && findPest(parts[1])) return { page: 'pest-detail', pest: parts[1] };
+    if (parts[0] === 'contact' && parts[1]) return { page: 'contact', service: parts[1] };
     if (parts[0] === 'contact') return { page: 'contact' };
     return { page: 'home' };
+  }
+
+  var SERVICE_TITLES = { pest: 'Pest Control', termite: 'Termite Control', insulation: 'Insulation', construction: 'Construction Services', other: 'General Inquiry' };
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function subjectForService(id) {
+    if (!id) return '';
+    if (id.indexOf('pest-') === 0) {
+      var pest = findPest(id.slice(5));
+      return pest ? 'Quote request — ' + pest.name + ' (Pest Control)' : '';
+    }
+    return SERVICE_TITLES[id] ? 'Quote request — ' + SERVICE_TITLES[id] : '';
+  }
+
+  /* Service <select> options for the contact form, with the 14 pests nested under an
+     optgroup so a visitor (or a prefilled "Free Quote" link) can name their exact pest. */
+  function serviceSelectOptions(selected) {
+    function opt(value, label) {
+      return '<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + label + '</option>';
+    }
+    var pestOptions = pestList.map(function (p) { return opt('pest-' + p.slug, p.name); }).join('');
+    return (
+      opt('', 'Select a service') +
+      opt('pest', 'Pest control — not sure which pest') +
+      '<optgroup label="Pest Control">' + pestOptions + '</optgroup>' +
+      opt('termite', 'Termite control') +
+      opt('insulation', 'Insulation') +
+      opt('construction', 'Construction services') +
+      opt('other', 'Something else')
+    );
   }
 
   function go(route) {
@@ -225,8 +259,12 @@
             '</ul>' +
           '</nav>' +
           '<div class="mc-header__end" style="display:flex;align-items:center;gap:var(--space-4)">' +
-            '<a class="mc-btn mc-btn--primary mc-btn--sm" href="#/contact">Get In Touch With Us</a>' +
-            '<button type="button" class="mc-btn mc-btn--secondary mc-btn--sm mc-nav-toggle" data-action="toggle-nav" aria-expanded="' + state.navOpen + '">' + (state.navOpen ? 'Close' : 'Menu') + '</button>' +
+            '<a class="mc-btn mc-btn--primary mc-btn--sm mc-header__quote" href="#/contact">Get In Touch With Us</a>' +
+            '<button type="button" class="mc-nav-toggle" data-action="toggle-nav" aria-expanded="' + state.navOpen + '" aria-label="' + (state.navOpen ? 'Close menu' : 'Open menu') + '">' +
+              (state.navOpen
+                ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>'
+                : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>') +
+            '</button>' +
           '</div>' +
         '</div>' +
         megaMenu() +
@@ -405,8 +443,8 @@
     }
 
     var heroCtas = svc === 'construction'
-      ? '<a class="mc-btn mc-btn--primary mc-btn--md" href="tel:3102131574">Call for Pricing</a><a class="mc-btn mc-btn--secondary mc-btn--md" href="#/contact">Get In Touch With Us</a>'
-      : '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Free Quote</a><a class="mc-btn mc-btn--secondary mc-btn--md" href="tel:3102131574">Call 310-213-1574</a>';
+      ? '<a class="mc-btn mc-btn--primary mc-btn--md" href="tel:3102131574">Call for Pricing</a><a class="mc-btn mc-btn--secondary mc-btn--md" href="#/contact/' + svc + '">Get In Touch With Us</a>'
+      : '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/' + svc + '">Free Quote</a><a class="mc-btn mc-btn--secondary mc-btn--md" href="tel:3102131574">Call 310-213-1574</a>';
 
     var top =
       '<section class="mc-band" style="background:var(--surface-sunken)">' +
@@ -452,7 +490,7 @@
           '<div class="mc-shell" style="display:flex;flex-direction:column;gap:var(--space-5);align-items:flex-start">' +
             '<h2 class="heading-md" style="margin:0;color:var(--ink)">Ongoing protection</h2>' +
             '<p class="body" style="margin:0;max-width:720px;color:var(--ink-muted)">Most Los Angeles homes stay clear with a quarterly exterior service. It is the cheapest way to handle pests, because nothing gets established indoors. Ask about scheduling when you call.</p>' +
-            '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Get In Touch With Us</a>' +
+            '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/pest">Get In Touch With Us</a>' +
           '</div>' +
         '</section>'
       ) : (
@@ -480,7 +518,7 @@
           '<div class="mc-shell" style="display:flex;flex-direction:column;gap:var(--space-5);align-items:flex-start">' +
             '<h2 class="heading-md" style="margin:0;color:var(--ink)">Request a walk-through</h2>' +
             '<p class="body" style="margin:0;max-width:720px;color:var(--ink-muted)">Every commercial quote starts with a site visit, at no cost. Tell us the property type and square footage and we will come out.</p>' +
-            '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Get In Touch With Us</a>' +
+            '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/pest">Get In Touch With Us</a>' +
           '</div>' +
         '</section>'
       );
@@ -520,7 +558,7 @@
               (isRes
                 ? '<div><h2 class="heading-md" style="margin:0 0 var(--space-5);color:var(--ink)">Buying or selling a home</h2><p class="body" style="margin:0 0 var(--space-5);max-width:720px;color:var(--ink-muted)">Escrow usually requires a termite inspection and a clearance on any damage found. We inspect, quote the repairs, and complete them in time for closing.</p></div>'
                 : '<div><h2 class="heading-md" style="margin:0 0 var(--space-5);color:var(--ink)">Working around tenants</h2><p class="body" style="margin:0 0 var(--space-5);max-width:720px;color:var(--ink-muted)">For occupied buildings we phase the work unit by unit, give tenants written notice and preparation instructions, and schedule fumigation for the window that empties the building for the shortest time.</p></div>') +
-              '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Get In Touch With Us</a>' +
+              '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/termite">Get In Touch With Us</a>' +
             '</div>' +
           '</div>' +
         '</section>';
@@ -566,7 +604,7 @@
           '<div class="mc-shell" style="display:flex;flex-direction:column;gap:var(--space-5);align-items:flex-start">' +
             '<h2 class="heading-md" style="margin:0;color:var(--ink)">Getting a number</h2>' +
             '<p class="body" style="margin:0;max-width:720px;color:var(--ink-muted)">Insulation is priced by square footage, the depth needed and whether old material has to come out first. We measure the space and quote it in person, at no cost.</p>' +
-            '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Free Quote</a>' +
+            '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/insulation">Free Quote</a>' +
           '</div>' +
         '</section>';
     } else {
@@ -619,7 +657,7 @@
             '<h1 class="display-lg" style="margin:0;color:var(--ink)">' + p.name + '</h1>' +
             '<p class="lead" style="margin:var(--space-5) 0 0;max-width:720px;color:var(--ink-muted)">' + p.lead + '</p>' +
             '<div style="margin-top:var(--space-5);display:flex;flex-wrap:wrap;gap:var(--space-4)">' +
-              '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Free Quote</a>' +
+              '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/pest-' + p.slug + '">Free Quote</a>' +
               '<a class="mc-btn mc-btn--secondary mc-btn--md" href="tel:3102131574">Call 310-213-1574</a>' +
             '</div>' +
           '</div>' +
@@ -640,7 +678,7 @@
             '<h2 class="heading-md" style="margin:0;color:var(--ink)">Get a free quote</h2>' +
             '<p class="body" style="margin:0;max-width:720px;color:var(--ink-muted)">The inspection is free and the treatment is guaranteed in writing. First-time customers get $50 off.</p>' +
             '<div style="display:flex;flex-wrap:wrap;gap:var(--space-4)">' +
-              '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact">Free Quote</a>' +
+              '<a class="mc-btn mc-btn--primary mc-btn--md" href="#/contact/pest-' + p.slug + '">Free Quote</a>' +
               '<a class="mc-btn mc-btn--secondary mc-btn--md" href="#/pest-control">All pest control services</a>' +
             '</div>' +
           '</div>' +
@@ -649,7 +687,8 @@
     );
   }
 
-  function pageContact() {
+  function pageContact(service) {
+    var subject = subjectForService(service);
     return (
       '<div data-screen-label="Contact">' +
         '<section class="mc-band" style="background:var(--surface-sunken)">' +
@@ -681,6 +720,7 @@
             '<div>' +
               '<h2 class="heading-md" style="margin:0 0 var(--space-5);color:var(--ink)">Send a message</h2>' +
               '<form id="contact-form" name="contact" style="display:flex;flex-direction:column;gap:var(--space-4);max-width:360px">' +
+                '<input type="hidden" id="c-subject" name="subject" value="' + escapeHtml(subject) + '" />' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-name">Name*</label><input class="mc-field__control" id="c-name" name="firstname" type="text" required /></div>' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-phone">Phone*</label><input class="mc-field__control" id="c-phone" name="phone" type="tel" required /></div>' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-email">Email</label><input class="mc-field__control" id="c-email" name="email" type="email" /></div>' +
@@ -690,9 +730,7 @@
                   '</select>' +
                 '</div>' +
                 '<div class="mc-field mc-field--select"><label class="mc-field__label" for="c-service">Service</label>' +
-                  '<select class="mc-field__control" id="c-service" name="service">' +
-                    '<option value="">Select a service</option><option value="pest">Pest control</option><option value="termite">Termite control</option><option value="insulation">Insulation</option><option value="construction">Construction services</option><option value="other">Something else</option>' +
-                  '</select>' +
+                  '<select class="mc-field__control" id="c-service" name="service">' + serviceSelectOptions(service) + '</select>' +
                 '</div>' +
                 '<div class="mc-field mc-field--multiline"><label class="mc-field__label" for="c-message">How can we help?</label><textarea class="mc-field__control" id="c-message" name="message"></textarea></div>' +
                 '<button type="submit" class="mc-btn mc-btn--primary mc-btn--md">Send Message</button>' +
@@ -712,7 +750,7 @@
     if (route.page === 'home') return pageHome();
     if (route.page === 'service') return pageService(route.svc);
     if (route.page === 'pest-detail') return pagePestDetail(route.pest);
-    if (route.page === 'contact') return pageContact();
+    if (route.page === 'contact') return pageContact(route.service);
     return pageHome();
   }
 
@@ -787,6 +825,13 @@
       state.mega = false;
       state.navOpen = false;
       render();
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'c-service') {
+      var subjectField = document.getElementById('c-subject');
+      if (subjectField) subjectField.value = subjectForService(e.target.value);
     }
   });
 

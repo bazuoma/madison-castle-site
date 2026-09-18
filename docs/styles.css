@@ -19,7 +19,24 @@ img { max-width: 100%; }
 
 .mc-shell { max-width: 1140px; margin: 0 auto; }
 .mc-band { padding: var(--space-7) var(--space-4); }
-.mc-nav-toggle { display: none; }
+
+.mc-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-field);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  cursor: pointer;
+}
+.mc-nav-toggle:hover { background: var(--border); }
+.mc-nav-toggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 .mc-util { background: var(--surface-inverse); }
 .mc-util__bar {
@@ -102,7 +119,20 @@ img { max-width: 100%; }
 .mc-drawer__row:hover { color: var(--blue-hover); text-decoration: underline; }
 .mc-drawer__row:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-.mc-field--select .mc-field__control { padding: 23px 8px 7px; appearance: none; background: var(--surface-raised); color: var(--ink); }
+.mc-field--select { position: relative; }
+.mc-field--select .mc-field__control { padding: 23px 32px 7px 8px; appearance: none; background: var(--surface-raised); color: var(--ink); }
+.mc-field--select::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: 20px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--ink-muted);
+  border-bottom: 2px solid var(--ink-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
 .mc-footer__logo-image { filter: brightness(0) invert(1); opacity: 0.92; }
 .mc-footer__logo:hover .mc-footer__logo-image { opacity: 1; }
 .mc-hero--panel .mc-hero__inner { max-width: 420px; }
@@ -133,7 +163,7 @@ img { max-width: 100%; }
 }
 @media (max-width: 1044px) {
   .mc-header__nav { display: none; }
-  .mc-nav-toggle { display: block; }
+  .mc-nav-toggle { display: inline-flex; }
   .mc-header__bar { gap: var(--space-4); justify-content: space-between; }
   .mc-header__logo-image { width: 62px; height: 70px; }
 }
@@ -142,4 +172,10 @@ img { max-width: 100%; }
   .mc-hero--panel .mc-hero__scrim { padding: var(--space-5) var(--space-4); }
   .mc-hero { min-height: 420px; }
   .mc-btn--md { width: 100%; }
+}
+@media (max-width: 480px) {
+  .mc-header__bar { padding: var(--space-2) var(--space-3); gap: var(--space-2); }
+  .mc-header__end { gap: var(--space-2) !important; }
+  .mc-header__quote { display: none; }
+  .mc-header__logo-image { width: 52px; height: 58px; }
 }
