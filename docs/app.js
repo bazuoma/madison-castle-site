@@ -719,8 +719,11 @@
             '</div>' +
             '<div>' +
               '<h2 class="heading-md" style="margin:0 0 var(--space-5);color:var(--ink)">Send a message</h2>' +
-              '<form id="contact-form" name="contact" style="display:flex;flex-direction:column;gap:var(--space-4);max-width:360px">' +
+              '<form id="contact-form" name="contact" action="https://api.web3forms.com/submit" method="POST" style="display:flex;flex-direction:column;gap:var(--space-4);max-width:360px">' +
+                '<input type="hidden" name="access_key" value="ab58c60f-81d5-4472-806d-c087ca870c04" />' +
+                '<input type="hidden" name="from_name" value="Madison Castle Website" />' +
                 '<input type="hidden" id="c-subject" name="subject" value="' + escapeHtml(subject) + '" />' +
+                '<input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-name">Name*</label><input class="mc-field__control" id="c-name" name="firstname" type="text" required /></div>' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-phone">Phone*</label><input class="mc-field__control" id="c-phone" name="phone" type="tel" required /></div>' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-email">Email</label><input class="mc-field__control" id="c-email" name="email" type="email" /></div>' +
@@ -769,11 +772,32 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var note = document.getElementById('contact-form-note');
+        var submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
         if (note) {
           note.className = 'mc-form-note';
-          note.textContent = "Thanks — we'll be in touch.";
+          note.textContent = 'Sending…';
         }
-        form.reset();
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' }
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data && data.success) {
+              if (note) note.textContent = "Thanks — we'll be in touch.";
+              form.reset();
+            } else {
+              if (note) note.textContent = 'Something went wrong sending that — please call us at 310-213-1574 instead.';
+            }
+          })
+          .catch(function () {
+            if (note) note.textContent = 'Something went wrong sending that — please call us at 310-213-1574 instead.';
+          })
+          .then(function () {
+            if (submitBtn) submitBtn.disabled = false;
+          });
       });
     }
   }
