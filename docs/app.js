@@ -726,7 +726,7 @@
                 '<input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-name">Name*</label><input class="mc-field__control" id="c-name" name="firstname" type="text" required /></div>' +
                 '<div class="mc-field"><label class="mc-field__label" for="c-phone">Phone*</label><input class="mc-field__control" id="c-phone" name="phone" type="tel" required /></div>' +
-                '<div class="mc-field"><label class="mc-field__label" for="c-email">Email</label><input class="mc-field__control" id="c-email" name="email" type="email" /></div>' +
+                '<div class="mc-field"><label class="mc-field__label" for="c-email">Email*</label><input class="mc-field__control" id="c-email" name="email" type="email" required /></div>' +
                 '<div class="mc-field mc-field--select"><label class="mc-field__label" for="c-property">Property type</label>' +
                   '<select class="mc-field__control" id="c-property" name="property_type">' +
                     '<option value="">Select one</option><option value="residential">Residential</option><option value="commercial">Commercial</option>' +
@@ -735,7 +735,7 @@
                 '<div class="mc-field mc-field--select"><label class="mc-field__label" for="c-service">Service</label>' +
                   '<select class="mc-field__control" id="c-service" name="service">' + serviceSelectOptions(service) + '</select>' +
                 '</div>' +
-                '<div class="mc-field mc-field--multiline"><label class="mc-field__label" for="c-message">How can we help?</label><textarea class="mc-field__control" id="c-message" name="message"></textarea></div>' +
+                '<div class="mc-field mc-field--multiline"><label class="mc-field__label" for="c-message">How can we help?*</label><textarea class="mc-field__control" id="c-message" name="message" required></textarea></div>' +
                 '<button type="submit" class="mc-btn mc-btn--primary mc-btn--md">Send Message</button>' +
                 '<p class="caption" style="margin:0;color:var(--ink-muted)">We use your details to answer your inquiry and nothing else.</p>' +
                 '<div id="contact-form-note" role="status"></div>' +
@@ -857,6 +857,22 @@
       var subjectField = document.getElementById('c-subject');
       if (subjectField) subjectField.value = subjectForService(e.target.value);
     }
+  });
+
+  /* Phone validation via setCustomValidity rather than the pattern attribute — some
+     browsers mishandle parentheses inside a pattern's character class, so this is
+     the more reliable way to allow "(310) 213-1574"-style formatting. */
+  function validatePhoneField(input) {
+    var digits = input.value.replace(/\D/g, '');
+    if (input.value && (digits.length < 7 || digits.length > 15)) {
+      input.setCustomValidity('Enter a valid phone number.');
+    } else {
+      input.setCustomValidity('');
+    }
+  }
+
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.id === 'c-phone') validatePhoneField(e.target);
   });
 
   window.addEventListener('hashchange', function () {
